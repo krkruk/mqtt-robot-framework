@@ -1,0 +1,49 @@
+@startuml [System Level] Rover software design
+header [System Level] Rover software design
+
+frame "Onboard components" {
+    component uart_devices as "**Hardware [1..]**
+    [Microcontrollers]
+    ---
+    Physical components directly interfacing
+    harware effectors such as motors, servos, etc."
+
+    component onboard_pc as "**Onboard PC [1]**
+    [x64 computer]
+    ---
+    Personal portable computer"
+
+    component network as "**Network infrastructure [1..]**
+    [2.4GHz-5GHz-ready hardware]
+    ---
+    Routers and antennas to provide wireless
+    connection at distance"
+}
+
+frame "Ground control components" {
+    component ground_equipment as "**Ground Control [1]**
+    [Hardware]
+    ---
+    Set of hardware at ground control such as
+    PCs, monitors, Human-Machine-Interfaces etc."
+
+    component operator as "<<human>>
+    **Human Operator [1..2]**
+    [Staff]
+    ---
+    A protein-based life form is meant
+    to use the system"
+
+    () hmi as "HMI"
+}
+
+ground_equipment .up. network: <<WiFi>>
+onboard_pc . network: <<Eth>>
+uart_devices .down.> onboard_pc: <<TTL/USB>>
+operator .up.> hmi: <<Biomechanics>> Use interfaces
+ground_equipment .down.> hmi: <<USB/HDMI/other>> Expose HMI
+
+legend
+    **HMI** - Human-Machine Interface
+end legend
+@enduml

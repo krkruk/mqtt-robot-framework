@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: uart-mqtt-gateway
+  config:
+    import:
+    - classpath:uart-mqtt-gateway.yml
+
+logging:
+  level:
+    root: INFO
+    '[pl.orion]': DEBUG
+
+server:
+  port: 8088

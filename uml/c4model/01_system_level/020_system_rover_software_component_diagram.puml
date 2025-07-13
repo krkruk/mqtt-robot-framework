@@ -1,0 +1,51 @@
+@startuml [System Level] Rover software design
+header [System Level] Rover software design
+
+frame "Onboard components" {
+    component firmware as "**Firmware [1..]**
+    [ARM architecture]
+    ---
+    Custom firmware developed for each microcontroller,
+    performing its unique set of responsibilities"
+
+    component hardware_gateway as "**Hardware gateway [1]**
+    [service]
+    ---
+    An application that automatically detects,
+    connects and routes hardware communication
+    onto PC integration_layering stack"
+
+    component integration_layer as "**Integration layer [1..]**
+    [services]
+    ---
+    Set of services that glue hardware with
+    higher level logic together"
+
+    component ground_ctrl_software as "**Ground Control Software [1..]**
+    [apps]
+    ---
+    Set of HMI applications hosted on board
+    and exposed to the human operator"
+}
+
+frame "Ground control components" {
+
+    component operator as "**Human Operator [1..2]**
+    [Staff]
+    ---
+    A protein-based life form is meant
+    to use the system"
+
+    () hmi as "HMI\n[Web browser]"
+}
+
+ground_ctrl_software .up. integration_layer: <<localhost>>
+hardware_gateway . integration_layer: <<localhost>>
+firmware .down.> hardware_gateway: <<TTL/USB>>
+operator .up.> hmi: <<HTTP>> Uses a web browser
+ground_ctrl_software .down.> hmi: <<HTTP>> Exposes web applications
+
+legend
+    **HMI** - Human-Machine Interface
+end legend
+@enduml

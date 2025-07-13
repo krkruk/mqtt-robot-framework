@@ -1,0 +1,79 @@
+@startuml [System Level] Rover software design
+header [System Level] Rover software design
+
+frame "Onboard components" {
+    component firmware as "**Firmware**" {
+
+        component chassis_firmware as "**Chassis firmware [1]**
+        ---
+        Controls the rover chassis, including the drive motors,
+        steering, feedback sensors, and other chassis-related components"
+
+        component manipulator_firmware as "**Manipulator firmware [1]**
+        ---
+        Controls the rover manipulator, including the arm motors,
+        gripper, and feedback sensors."
+
+        component power_management_firmware as "**Power management firmware [1]**
+        ---
+        Monitors power usage and li-ion battery health,
+        and emergency remote shutdowns"
+
+        component science_module_firmware as "**Science module firmware [1]**
+        ---
+        Controls the rover science module, including the digital microscope,
+        sample containers, and other science-related components"
+    }
+
+    component hardware_gateway as "**uart-mqtt-gateway-service**
+    [service]
+    ---
+    An application that automatically detects,
+    connects and routes hardware communication
+    onto MQTT server"
+
+    component integration_layer as "**Integration layer [1..]**" {
+        component mqrtt_broker as "**MQTT broker [1]**
+        ---
+        A message broker that handles communication
+        between the hardware gateway and the onboard components"
+
+    }
+
+    component ground_ctrl_software as "**Ground Control Software [1..]**" {
+        component telemetry_viewer as "**Telemetry Viewer [1]**
+        [Grafana dashboard]
+        ---
+        A web application that displays telemetry data
+        from the rover components in real-time"
+
+        component ground_control_app as "**Ground Control App [1]**
+        [Web app]
+        ---
+        An HMI application that allows the human operator to
+        control the rover, including exectuting scripted scenarios,
+        trigger science experiments and control onboard components"
+    }
+}
+
+frame "Ground control components" {
+
+    component operator as "**Human Operator [1..2]**
+    [Staff]
+    ---
+    A protein-based life form is meant
+    to use the system"
+
+    () hmi as "HMI\n[Web browser]"
+}
+
+ground_ctrl_software .up. integration_layer: <<localhost>>
+hardware_gateway . integration_layer: <<localhost>>
+firmware .down.> hardware_gateway: <<TTL/USB>>
+operator .up.> hmi: <<HTTP>> Uses a web browser
+ground_ctrl_software .down.> hmi: <<HTTP>> Exposes web applications
+
+legend
+    **HMI** - Human-Machine Interface
+end legend
+@enduml

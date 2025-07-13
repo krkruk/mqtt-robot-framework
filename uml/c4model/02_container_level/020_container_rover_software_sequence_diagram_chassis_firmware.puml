@@ -1,0 +1,39 @@
+@startuml Chassis Firmware Sequence Diagram
+header [Container Level] Chassis Firmware-Ground Control communication - sequence diagram
+title Sequence Diagram for Chassis Firmware
+
+autonumber 1.1
+
+actor "Human Operator" as op
+
+box "Ground Control Software"
+    participant "//:Ground Control App//" as gca
+    participant "//:Telemetry Viewer//" as tv
+end box
+
+box "Integration layer"
+    participant "//:MQTT broker//" as mqtt
+end box
+
+box "Onboard components"
+    participant "//:uart-mqtt-gateway//" as gw
+    participant "Chassis firmware" as cf
+end box
+
+autonumber
+
+group Inbound Flow: Operator sends a drive command
+    op -> gca++: <<Input>> Issues 'move forward' command
+    gca ->o mqtt--: <<MQTT PUB>> Publishes command\n\tto 'cmd/drive' topic
+    mqtt o-> gw++: <<MQTT SUB>> Forwards command\n\tfrom 'cmd/drive' topic
+    gw -> cf--++: Sends 'move forward' serial command
+    cf -> cf: Controls drive motors
+end
+
+group Outbound Flow: Chassis sends telemetry
+    cf -> gw--++: Sends motor speed telemetry via serial
+    gw ->o mqtt--: <<MQTT PUB>> Publishes telemetry\n\tto 'telemetry/chassis/speed' topic
+    mqtt o-> tv++: <<MQTT SUB>> Forwards telemetry\n\tfrom topic
+    tv -> op--: <<UI>> Displays motor speed
+end
+@enduml
