@@ -1,44 +1,47 @@
 # uart-mqtt-gateway
 
 `uart-mqtt-gateway` service translates UART full-duplex communication into
-MQTT-driven events. In that way, any onboard device shall be connected to TCP/IP stack
-and therefore be controllable remotely.
+MQTT-driven events. In this way, any onboard device can be connected to the TCP/IP stack
+and therefore it can be controlled remotely.
 
 [System level component diagram](../uml/c4model/01_system_level/020_system_rover_software_component_diagram.puml)
 
-The service is meant to be a part of a bigger picture project that designs and builds a Mars rover
-to compete in European Rover Challange. The robot comprises several microcontrollers that
-control chassis and driving model, manipulator and inverse kinematics, science experiments
-and monitor power usage and li-ion battery management.
+The service is meant to be part of a bigger project that designs and builds a Mars rover
+to compete in the European Rover Challenge. The robot comprises several microcontrollers that
+control the chassis and driving model, manipulator and inverse kinematics, science experiments,
+and monitor power usage and Li-ion battery management.
 
-Each microcontroller shall be connected to a PC (x64) with a UART-USB converter. The `uart-mqtt-gateway`
-service shall route communication inbounds and outbounds. The application shall accept
-incoming UART traffic and convert the messages into MQTT messages. Similarly, the service shall
-deliver MQTT messages into corresponding UART devices. In that way, the application provides:
-* full-duplex comunication
-* a universal interface to implement higher level logic (i.e., inverse kinematics, traversal planning,
-mission scripting etc.)
+Each microcontroller is connected to a PC (x64) with a UART-USB converter. The `uart-mqtt-gateway`
+service routes communication inbound and outbound. The application accepts
+incoming UART traffic and converts the messages into MQTT messages. Similarly, the service
+delivers MQTT messages to corresponding UART devices. In this way, the application provides:
+* full-duplex communication
+* a universal interface to implement higher-level logic (i.e., inverse kinematics, traversal planning,
+mission scripting, etc.)
 
-The service is the key to integrate individual components into a single robotic platform.
+The service is the key to integrating individual components into a single robotic platform.
+
 
 ## Functionalities
 
-* **Hot-swappable UART connectivity**: Connect/disconnect your device on-the-fly.
-* **Automatic message routing**: Route messages onto corresponding MQTT topics, configurable mapping
-* **Accept inbound messages**: Read inbound MQTT messages and redirect into corresponding UART devices
+* **Hot-swappable UART connectivity**: Connect/disconnect your device on the fly.
+* **Automatic message routing**: Route messages to corresponding MQTT topics, configurable mapping
+* **Accept inbound messages**: Read inbound MQTT messages and redirect to corresponding UART devices
+
 
 ## Architecture
 
 The service leverages Java multithreading capabilities:
-* Any newly detected shall spin up a new thread
-* Any freshly removed device shall be safely removed from resources and MQTT messages will not be processed
-* The service shall periodically (1s by default, configurable), check for new devices
-* The service shall rely on a universally acknowledged JSON schema to map a device onto corresponding MQTT topics, as presented below
-* The service shall publish any errors onto MQTT error topic to notify a human operator
-* The service shall not interfere with the payload. It shall read only one predefined 
+* Any newly detected device spins up a new thread
+* Any recently disconnected device is safely removed from resources and MQTT messages will not be processed
+* The service periodically checks for new devices (in 1s intervals by default, configurable)
+* The service relies on a universally acknowledged JSON schema to map a device to corresponding MQTT topics, as presented below. Messages are delimited with `\n\n` by default
+* The service publishes any errors to the MQTT error topic to notify a human operator
+* The service does not interfere with the payload. It reads only one predefined 
 field (`eventType`, by default) to match configuration and corresponding MQTT topics
-* The configuration shall be specfied in a separate file: `uart-mqtt-mapping.yml`
-* The application shall be launched at port 8088 by default (see yaml configuration)
+* The configuration is specified in a separate file: `uart-mqtt-mapping.yml`
+* The application is launched on port 8088 by default (see yaml configuration)
+
 
 [Sequence diagram](../uml/c4model/02_container_level/020_container_rover_software_sequence_diagram_chassis_firmware.puml)
 
