@@ -4,7 +4,7 @@
 MQTT-driven events. In that way, any onboard device shall be connected to TCP/IP stack
 and therefore be controllable remotely.
 
-[System level component diagram](uml/c4model/01_system_level/020_system_rover_software_component_diagram.puml)
+[System level component diagram](../uml/c4model/01_system_level/020_system_rover_software_component_diagram.puml)
 
 The service is meant to be a part of a bigger picture project that designs and builds a Mars rover
 to compete in European Rover Challange. The robot comprises several microcontrollers that
@@ -40,7 +40,7 @@ field (`eventType`, by default) to match configuration and corresponding MQTT to
 * The configuration shall be specfied in a separate file: `uart-mqtt-mapping.yml`
 * The application shall be launched at port 8088 by default (see yaml configuration)
 
-[Sequence diagram](uml/c4model/02_container_level/020_container_rover_software_sequence_diagram_chassis_firmware.puml)
+[Sequence diagram](../uml/c4model/02_container_level/020_container_rover_software_sequence_diagram_chassis_firmware.puml)
 
 ### JSON schema
 ```
