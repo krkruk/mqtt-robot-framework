@@ -1,0 +1,34 @@
+version: "3.7"
+services:
+  # mqtt5 eclipse-mosquitto
+  mqtt5:
+    image: eclipse-mosquitto
+    container_name: mqtt5
+    ports:
+      - "1883:1883" #default mqtt port
+      - "9001:9001" #default mqtt port for websockets
+    volumes:
+      - ./config:/mosquitto/config:rw
+      - ./data:/mosquitto/data:rw
+      - ./log:/mosquitto/log:rw
+    restart: unless-stopped
+  grafana:
+    image: grafana/grafana-enterprise
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+     - GF_SERVER_ROOT_URL=http://my.grafana.server/
+     - GF_PLUGINS_PREINSTALL=grafana-clock-panel
+    ports:
+     - '3000:3000'
+    volumes:
+      - ./data/grafana:/var/lib/grafana:rw
+# volumes for mapping data,config and log
+volumes:
+  config:
+  data:
+  log:
+  grafana-storage: {}
+networks:
+  default:
+    name: mqtt5-network
