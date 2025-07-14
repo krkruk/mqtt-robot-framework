@@ -22,7 +22,7 @@ services:
     ports:
      - '3000:3000'
     volumes:
-      - ./data/grafana:/var/lib/grafana:rw
+      - ./grafana:/var/lib/grafana:rw
 # volumes for mapping data,config and log
 volumes:
   config:
