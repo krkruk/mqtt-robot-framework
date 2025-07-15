@@ -1,7 +1,7 @@
 @startuml [System Level] Rover software design
 header [System Level] Rover software design
 
-frame "Onboard components" {
+frame "Onboard components" as onboard_components {
     component firmware as "**Firmware**" {
 
         component chassis_firmware as "**Chassis firmware [1]**
@@ -33,10 +33,38 @@ frame "Onboard components" {
     onto MQTT server"
 
     component integration_layer as "**Integration layer [1..]**" {
-        component mqrtt_broker as "**MQTT broker [1]**
+
+        component mqtt_broker as "**MQTT broker [1]**
         ---
         A message broker that handles communication
         between the hardware gateway and the onboard components"
+
+        component chassis_integration as "**chassis-controller-service [1]**
+        [service]
+        ---
+        An application that translates MQTT messages with
+        user commands into chassis firmware commands,
+        providing a high-level interface for the chassis"
+
+        component manipulator_integration as "**manipulator-controller-service [1]**
+        [service]
+        ---
+        An application that translates MQTT messages with
+        user commands into manipulator firmware commands,
+        providing a high-level interface for the manipulator"
+
+        component miscellaneous_integration as "**miscellaneous-controller-service [1]**
+        [service]
+        ---
+        An application that translates MQTT messages with
+        user commands into commands that control power management,
+        and science module hardware"
+
+        component automation_navigation as "**autonomous-navigation-and-kinematics-service [1..]**
+        [services]
+        ---
+        A set of services that provide autonomous navigation,
+        kinematics, and path planning capabilities for the rover."
 
     }
 
@@ -47,7 +75,7 @@ frame "Onboard components" {
         A web application that displays telemetry data
         from the rover components in real-time"
 
-        component ground_control_app as "**Ground Control App [1]**
+        component ground_control_app as "**ground-control-web-app [1]**
         [Web app]
         ---
         An HMI application that allows the human operator to
@@ -56,7 +84,7 @@ frame "Onboard components" {
     }
 }
 
-frame "Ground control components" {
+frame "Ground control components" as g_ctrl_components{
 
     component operator as "**Human Operator [1..2]**
     [Staff]
@@ -67,11 +95,19 @@ frame "Ground control components" {
     () hmi as "HMI\n[Web browser]"
 }
 
-ground_ctrl_software .up. integration_layer: <<localhost>>
-hardware_gateway . integration_layer: <<localhost>>
+integration_layer .down. ground_ctrl_software: <<MQTT over localhost>>
 firmware .down.> hardware_gateway: <<TTL/USB>>
+hardware_gateway .down. integration_layer: <<MQTT over localhost>>
 operator .up.> hmi: <<HTTP>> Uses a web browser
-ground_ctrl_software .down.> hmi: <<HTTP>> Exposes web applications
+ground_ctrl_software .down.> hmi: <<HTTP/WebSocket>> Exposes web applications
+
+automation_navigation -up-> chassis_integration: <<MQTT>> Use as hardware abstraction
+automation_navigation -up-> manipulator_integration: <<MQTT>> Use as hardware abstraction
+chassis_integration .up. mqtt_broker: <<MQTT>>
+manipulator_integration .up. mqtt_broker: <<MQTT>>
+miscellaneous_integration .right. mqtt_broker: <<MQTT>>
+
+telemetry_viewer -[hidden]-> ground_control_app 
 
 legend
     **HMI** - Human-Machine Interface

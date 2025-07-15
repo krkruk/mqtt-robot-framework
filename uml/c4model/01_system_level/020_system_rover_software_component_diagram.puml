@@ -42,8 +42,8 @@ frame "Ground control components" {
 ground_ctrl_software .up. integration_layer: <<localhost>>
 hardware_gateway . integration_layer: <<localhost>>
 firmware .down.> hardware_gateway: <<TTL/USB>>
-operator .up.> hmi: <<HTTP>> Uses a web browser
-ground_ctrl_software .down.> hmi: <<HTTP>> Exposes web applications
+operator .up.> hmi: <<HTTP/WebSocket>> Uses a web browser
+ground_ctrl_software .down.> hmi: <<HTTP/WebSocket>> Exposes web applications
 
 legend
     **HMI** - Human-Machine Interface

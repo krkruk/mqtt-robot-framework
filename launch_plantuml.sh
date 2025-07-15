@@ -1,8 +1,10 @@
 #!/bin/bash
 
 # PlantUML Server Launch Script
-# Usage: ./plantuml-server.sh [version]
-# Example: ./plantuml-server.sh 1.2025.4
+# Usage: ./launch_plantuml.sh [version] [--svg]
+# Example: ./launch_plantuml.sh 1.2025.4
+# Example: ./launch_plantuml.sh --svg
+# Example: ./launch_plantuml.sh 1.2025.4 --svg
 
 set -e
 
@@ -134,50 +136,103 @@ start_server() {
     fi
 }
 
+# Function to generate SVG files from .puml sources
+generate_svgs() {
+    local jar_file=$1
+    print_info "Generating SVG files..."
+
+    # Find .puml files in the current directory and in the uml/ directory
+    local puml_files=$(find . -maxdepth 1 -name "*.puml" 2>/dev/null)
+    if [ -d "uml" ]; then
+        puml_files="$puml_files "$(find "uml" -name "*.puml" 2>/dev/null)
+    fi
+
+    if [ -z "$puml_files" ]; then
+        print_warning "No .puml files found to process."
+        return
+    fi
+
+    for file in $puml_files; do
+        local svg_file="${file%.puml}.svg"
+        print_info "Processing ${file} -> ${svg_file}"
+        java -jar "${jar_file}" -tsvg -pipe < "${file}" > "${svg_file}"
+        if [ $? -eq 0 ]; then
+            print_success "Generated ${svg_file}"
+        else
+            print_error "Failed to generate SVG for ${file}"
+        fi
+    done
+}
+
 # Main script execution
 main() {
-    local version="${1:-$DEFAULT_VERSION}"
-    
-    print_info "PlantUML Server Launch Script"
+    local version=""
+    local svg_mode=false
+    local version_arg_present=false
+
+    # Parse arguments
+    for arg in "$@"
+    do
+        case $arg in
+            --svg)
+            svg_mode=true
+            ;;
+            *)
+            version=$arg
+            version_arg_present=true
+            ;;
+        esac
+    done
+
+    if [ -z "$version" ]; then
+        version=$DEFAULT_VERSION
+    fi
+
+    print_info "PlantUML Utility Script"
+    if [ "$svg_mode" = true ]; then
+        print_info "Mode: SVG Generation"
+    else
+        print_info "Mode: Server"
+    fi
     print_info "Version to use: ${version}"
     echo ""
-    
+
     # Check if Java is available
     check_java
-    
+
     # Check for existing PlantUML jar
     print_info "Checking for existing PlantUML jar files..."
-    
+
     if jar_file=$(find_plantuml_jar); then
         print_success "Found existing PlantUML jar: ${jar_file}"
         
-        # Ask user if they want to use existing jar or download new one
-        if [ "$#" -eq 0 ]; then
-            print_info "Using existing jar file"
-        else
+        if [ "$version_arg_present" = true ]; then
             print_warning "Version specified but jar exists. Using existing: ${jar_file}"
         fi
     else
         print_info "No PlantUML jar found in current directory"
-        print_info "Downloading version ${version}..."
         jar_file=$(download_plantuml "${version}")
     fi
-    
-    # Check if server is already running
-    if [ -f "plantuml-server.pid" ]; then
-        local existing_pid=$(cat plantuml-server.pid)
-        if kill -0 $existing_pid 2>/dev/null; then
-            print_warning "PlantUML server appears to be already running (PID: $existing_pid)"
-            print_info "To stop it: kill $existing_pid"
-            exit 1
-        else
-            print_info "Removing stale PID file"
-            rm -f plantuml-server.pid
+
+    if [ "$svg_mode" = true ]; then
+        generate_svgs "${jar_file}"
+    else
+        # Check if server is already running
+        if [ -f "plantuml-server.pid" ]; then
+            local existing_pid=$(cat plantuml-server.pid)
+            if kill -0 $existing_pid 2>/dev/null; then
+                print_warning "PlantUML server appears to be already running (PID: $existing_pid)"
+                print_info "To stop it: kill $existing_pid"
+                exit 1
+            else
+                print_info "Removing stale PID file"
+                rm -f plantuml-server.pid
+            fi
         fi
+        
+        # Start the server
+        start_server "${jar_file}"
     fi
-    
-    # Start the server
-    start_server "${jar_file}"
 }
 
 # Run main function with all arguments
