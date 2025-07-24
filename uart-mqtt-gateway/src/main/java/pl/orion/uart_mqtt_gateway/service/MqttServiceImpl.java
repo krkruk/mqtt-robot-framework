@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import pl.orion.uart_mqtt_gateway.config.UartMqttGatewayProperties;
 
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -21,13 +22,20 @@ public class MqttServiceImpl implements MqttService {
     public void connect() {
         client = MqttClient.builder()
                 .useMqttVersion5()
+                .automaticReconnect()
+                    .maxDelay(properties.getMqtt().getConnectionReconnectDelayMs(), TimeUnit.MILLISECONDS)
+                    .applyAutomaticReconnect()
+                .simpleAuth()
+                    .username(properties.getMqtt().getBrokerUsername())
+                    .password(properties.getMqtt().getBrokerPassword().getBytes())
+                    .applySimpleAuth()
                 .identifier(properties.getMqtt().getClientId() + "-" + UUID.randomUUID())
                 .serverHost(properties.getMqtt().getBrokerUrl())
                 .serverPort(properties.getMqtt().getBrokerPort())
                 .buildAsync();
 
         client.connectWith()
-                .keepAlive(properties.getMqtt().getKeepAliveIntervalS())
+                .keepAlive((int) TimeUnit.MILLISECONDS.toSeconds(properties.getMqtt().getConnectionKeepaliveMs()))
                 .send()
                 .whenComplete((connAck, throwable) -> {
                     if (throwable != null) {

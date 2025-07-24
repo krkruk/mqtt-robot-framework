@@ -1,7 +1,9 @@
 package pl.orion.uart_mqtt_gateway.config;
 
 import lombok.Data;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.bind.Name;
 
 import java.util.List;
 
@@ -17,12 +19,28 @@ public class UartMqttGatewayProperties {
 
     @Data
     public static class Mqtt {
-        private String brokerUrl;
-        private int brokerPort;
         private String clientId;
-        private int connectionTimeoutS;
-        private int keepAliveIntervalS;
-        private int reconnectDelayMs;
+
+        @Name("broker.url")
+        private String brokerUrl;
+
+        @Name("broker.port")
+        private int brokerPort;
+
+        @Name("broker.username")
+        private String brokerUsername;
+
+        @Name("broker.password")
+        private String brokerPassword;
+
+        @Name("connection.timeout.ms")
+        private long connectionTimeoutMs;
+
+        @Name("connection.keepalive.ms")
+        private long connectionKeepaliveMs;
+
+        @Name("connection.reconnect.delay.ms")
+        private long connectionReconnectDelayMs;
     }
 
     @Data

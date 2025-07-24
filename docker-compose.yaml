@@ -7,28 +7,58 @@ services:
     ports:
       - "1883:1883" #default mqtt port
       - "9001:9001" #default mqtt port for websockets
+    restart: unless-stopped
+    user: "${UID:-1000}:${GID:-1000}"
+    command: sh -c "
+      /mosquitto/config/create_default_user.sh && \
+      mosquitto -c /mosquitto/config/mosquitto.conf"
     volumes:
-      - ./config:/mosquitto/config:rw
-      - ./data:/mosquitto/data:rw
-      - ./log:/mosquitto/log:rw
-    restart: unless-stopped
-  grafana:
-    image: grafana/grafana-enterprise
-    container_name: grafana
-    restart: unless-stopped
+      - ./mqtt-server/config/:/mosquitto/config
+      - mosquitto-data:/mosquitto/data
     environment:
-     - GF_SERVER_ROOT_URL=http://my.grafana.server/
-     - GF_PLUGINS_PREINSTALL=grafana-clock-panel
-    ports:
-     - '3000:3000'
+      - MQTT_USERNAME=${MQTT_USERNAME:-user}
+      - MQTT_PASSWORD=${MQTT_PASSWORD:-user}
+    networks:
+      - orion-network
+
+  # uart-mqtt-gateway service
+  uart-mqtt-gateway:
+    build: ./uart-mqtt-gateway
+    container_name: uart-mqtt-gateway
+    privileged: true
     volumes:
-      - ./grafana:/var/lib/grafana:rw
-# volumes for mapping data,config and log
+      - /dev:/dev
+    environment:
+      - MQTT_USERNAME=${MQTT_USERNAME:-user}
+      - MQTT_PASSWORD=${MQTT_PASSWORD:-user}
+      - UART_MQTT_GATEWAY_MQTT_BROKER_URL=mqtt5
+    user: "${UID:-1000}:${GID:-1000}"
+    depends_on:
+      - mqtt5
+    ports:
+      - "8088:8088"
+    networks:
+      - orion-network
+
+  ground-control-web-app:
+    build: ./ground-control-web-app
+    container_name: ground-control-web-app
+    environment:
+      - MQTT_USERNAME=${MQTT_USERNAME:-user}
+      - MQTT_PASSWORD=${MQTT_PASSWORD:-user}
+      - VITE_MQTT_BROKER_URL=mqtt5
+    user: "${UID:-1000}:${GID:-1000}"
+    depends_on:
+      - mqtt5
+    ports:
+      - "8080:8080"
+    networks:
+      - orion-network
+
 volumes:
-  config:
-  data:
-  log:
-  grafana-storage: {}
+  mosquitto-data:
+    driver: local
+
 networks:
-  default:
-    name: mqtt5-network
+  orion-network:
+    driver: bridge
