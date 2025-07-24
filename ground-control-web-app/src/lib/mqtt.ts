@@ -1,6 +1,6 @@
 import mqtt from 'mqtt';
 
-const brokerAddress = 'mqtt://localhost:1883';
+const brokerAddress = `ws://${import.meta.env.VITE_MQTT_BROKER_URL || 'not_here_missing_var'}:9001`;
 const clientId = `ground-control-web-app-${Math.random().toString(16).slice(2)}`;
 
 const options = {

@@ -134,6 +134,9 @@ docker run -it --net host eclipse-mosquitto
 
 Assuming the default configuration is sufficient, simply run:
 ```
+export MQTT_USERNAME=user
+export MQTT_PASSWORD=user
+
 ./gradlew bootRun
 ```
 
@@ -144,4 +147,5 @@ docker build -t uart-mqtt-gateway .
 
 To run the Docker container with access to serial ports:
 ```/usr/bin/env bash
-docker run -d --privileged -v /dev:/dev uart-mqtt-gateway
+docker run --rm --privileged -v /dev:/dev -eMQTT_USERNAME=user -eMQTT_PASSWORD=user --name uart-mqtt-gateway uart-mqtt-gateway
+```
