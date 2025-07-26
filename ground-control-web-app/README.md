@@ -9,7 +9,7 @@ are allowed.
 The app looks like this:
 
 
-![App Screenshot](static/app_ui.jpg | width=250)
+![App Screenshot](static/app_ui.jpg)
 
 ## Features
 
