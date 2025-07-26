@@ -1,21 +1,23 @@
-# Stage 1: Build the application
-FROM node:18-alpine AS builder
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
+# ---- Base Image Stage ----
+FROM python:3.12-slim AS base
+
+# Install curl
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+# Set up a non-root user
+RUN useradd -ms /bin/bash appuser
+
+# Install uv
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.local/bin:$PATH"
+
+# Copy project files and install dependencies
+WORKDIR /home/appuser
 COPY . .
-ARG VITE_MQTT_BROKER_URL
-ENV VITE_MQTT_BROKER_URL=$VITE_MQTT_BROKER_URL
-RUN npm run build
-COPY static ./build/static
 
-# Stage 2: Serve the application
-FROM node:18-alpine
-WORKDIR /app
+RUN uv sync
 
-COPY --from=builder /app/build ./build
-COPY --from=builder /app/package.json ./package.json
-RUN npm install -g sirv-cli
-WORKDIR /app/build
+# Expose the port and run the application
+ENV LOG_LEVEL=DEBUG
 EXPOSE 8080
-CMD ["sirv", ".", "--port", "8080", "--host", "--single"]
+CMD ["uv", "run", "main.py", "--host", "0.0.0.0", "--port", "8080"]

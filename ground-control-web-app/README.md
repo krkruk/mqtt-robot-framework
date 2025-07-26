@@ -2,6 +2,15 @@
 
 This is a web application designed to control a rover, featuring a modular UI, real-time telemetry, and support for various input methods.
 
+The app is meant to be hosted on the onboard computer and accessible in any device in its local network. As the network is
+strickly controlled, the application does not bother with racy conditions and multiple users at the same time
+are allowed.
+
+The app looks like this:
+
+
+![App Screenshot](static/app_ui.jpg | width=250)
+
 ## Features
 
 *   **Modular UI:** Vertical split layout with a collapsible menu, playground, and telemetry panes.
@@ -11,12 +20,16 @@ This is a web application designed to control a rover, featuring a modular UI, r
 *   **Responsive Design:** Supports PC screens and mobile devices (landscape orientation enforced).
 *   **Dockerized Deployment:** Application can be built and run as a Docker image.
 
+
 ## Tech Stack
 
-*   [SvelteKit](https://kit.svelte.dev/): Web framework
-*   [Tailwind CSS](https://tailwindcss.com/): Utility-first CSS framework
+*   [Python3](https://www.python.org/) - main programming language
+*   [UV python package manager](https://docs.astral.sh/uv/): modern package manager that turns
+package management hell into pleasure
+*   [NiceGUI](https://github.com/nicegui/nicegui): Modern and easy to use Web Framework for Python
+    * With some TypeScript patches to handle extra things such as Gamepad API
 *   [Gamepad API](https://developer.mozilla.org/en-US/docs/Web/API/Gamepad_API): For USB controller input
-*   [MQTT.js](https://mqttjs.com/): MQTT client for browser and Node.js
+*   [Python MQTT Paho library](https://pypi.org/project/paho-mqtt/): MQTT5 library with WebSocket support
 *   [Docker](https://www.docker.com/): Containerization platform
 
 ## Setup
@@ -31,25 +44,43 @@ To get the project up and running locally, follow these steps:
 
 2.  **Install dependencies:**
     ```bash
-    npm install
+    curl -LsSf https://astral.sh/uv/install.sh | sh
     ```
 
-3.  **Download Icons (Manual Step):**
-    The application uses custom SVG icons for the menu. Please download the following icons and place them in the `static/icons/` directory:
-    *   Chassis: [https://uxwing.com/wp-content/themes/uxwing/download/transportation-automotive/car-tire-wheel-icon.png](https://uxwing.com/wp-content/themes/uxwing/download/transportation-automotive/car-tire-wheel-icon.png) (Rename to `chassis.svg`)
-    *   Manipulator: [https://uxwing.com/wp-content/themes/uxwing/download/business-professional-services/mechanical-arm-icon.png](https://uxwing.com/wp-content/themes/uxwing/download/business-professional-services/mechanical-arm-icon.png) (Rename to `manipulator.svg`)
-    *   Science: [https://uxwing.com/wp-content/themes/uxwing/download/medical-science-lab/flask-icon.png](https://uxwing.com/wp-content/themes/uxwing/download/medical-science-lab/flask-icon.png) (Rename to `science.svg`)
-
-    *Note: Ensure the downloaded files are converted to SVG format if they are PNGs, and named correctly.* For example, you can use an online converter or a graphics editor.
 
 ## Running the Application
+
+To run the application simply type:
+
+```bash
+uv run main.py
+```
+
+Also check docker instructions as it's a preferable way to start the application.
+
+### Environment Variables
+
+The application uses the following environment variables for configuration:
+
+*   `LOG_LEVEL`: Sets the logging verbosity (e.g., `INFO`, `DEBUG`, `WARNING`, `ERROR`). Default is `INFO`.
+    Example: `LOG_LEVEL=DEBUG uv run main.py`
+
+*   `MQTT_BROKER_URL`: The URL of the MQTT broker. For WebSocket connections, use `ws://` or `wss://` scheme. Default is `ws://mqtt5:9001`.
+    Example: `MQTT_BROKER_URL=ws://localhost:9001 uv run main.py`
+
+*   `MQTT_BROKER_PORT`: The port of the MQTT broker. Default is `1883`.
+    Example: `MQTT_BROKER_PORT=1883 uv run main.py`
+
+*   `MQTT_USERNAME`: Username for MQTT broker authentication. Default is `user`.
+
+*   `MQTT_PASSWORD`: Password for MQTT broker authentication. Default is `user`.
 
 ### Development Mode
 
 To run the application in development mode:
 
 ```bash
-npm run dev
+uv run main.py
 ```
 
 The application will be accessible at `http://localhost:8080`.
@@ -75,15 +106,3 @@ To build and run the application using Docker:
 *   **Menu:** Use the buttons on the left-hand side (Chassis, Manipulator, Science) to switch between different control modes.
 *   **Chassis Controller:** When in Chassis mode, use the draggable knob to control movement. The rotation buttons and Xbox-style buttons (X, Y, A, B) provide additional controls.
 *   **Telemetry Pane:** The bottom right pane displays real-time telemetry data when in Chassis mode.
-
-## Color Palette
-
-The application uses a custom color palette:
-*   Orange: `#FFA500`
-*   Black: `#000000`
-*   Gray: `#808080`
-*   White: `#FFFFFF`
-
-## Theme
-
-This project integrates components and styling from the Crypgo theme. The `tailwind.config.js` has been updated to include its extended theme properties.
