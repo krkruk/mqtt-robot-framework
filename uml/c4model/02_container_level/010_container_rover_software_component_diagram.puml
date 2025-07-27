@@ -6,13 +6,14 @@ frame "Onboard components" as onboard_components {
 
         component chassis_firmware as "**Chassis firmware [1]**
         ---
-        Controls the rover chassis, including the drive motors,
-        steering, feedback sensors, and other chassis-related components"
+        Controls the rover chassis, including:
+        the drive motors, steering, feedback 
+        sensors, and other chassis-related components"
 
         component manipulator_firmware as "**Manipulator firmware [1]**
         ---
-        Controls the rover manipulator, including the arm motors,
-        gripper, and feedback sensors."
+        Controls the rover manipulator, including:
+        the arm motors, gripper, and feedback sensors."
 
         component power_management_firmware as "**Power management firmware [1]**
         ---
@@ -21,8 +22,9 @@ frame "Onboard components" as onboard_components {
 
         component science_module_firmware as "**Science module firmware [1]**
         ---
-        Controls the rover science module, including the digital microscope,
-        sample containers, and other science-related components"
+        Controls the rover science module, including:
+        the digital microscope, sample containers, 
+        and other science-related components"
     }
 
     component hardware_gateway as "**uart-mqtt-gateway-service**
@@ -39,26 +41,21 @@ frame "Onboard components" as onboard_components {
         A message broker that handles communication
         between the hardware gateway and the onboard components"
 
-        component chassis_integration as "**chassis-controller-service [1]**
+        component chassis_integration as "**rover-controller service [1]**
         [service]
         ---
-        An application that translates MQTT messages with
-        user commands into chassis firmware commands,
-        providing a high-level interface for the chassis"
-
-        component manipulator_integration as "**manipulator-controller-service [1]**
-        [service]
-        ---
-        An application that translates MQTT messages with
-        user commands into manipulator firmware commands,
-        providing a high-level interface for the manipulator"
-
-        component miscellaneous_integration as "**miscellaneous-controller-service [1]**
-        [service]
-        ---
-        An application that translates MQTT messages with
-        user commands into commands that control power management,
-        and science module hardware"
+        A single service that translates user inputs into commands
+        sent to all: chassis, manipulator, power management, 
+        and science module firmware.
+        Functionalities:
+        * Receive and map user commands from the ground 
+          control software
+        * Use a robot models to control it (i.e., 
+          differential steering for the chassis
+          basic manipulator movement and gripper control)
+        * Supports basic scripting and pre-defined scenarios
+        * May use camera images for navigation and path 
+          planning in basic scenarios"
 
         component automation_navigation as "**autonomous-navigation-and-kinematics-service [1..]**
         [services]
@@ -102,12 +99,11 @@ operator .up.> hmi: <<HTTP>> Uses a web browser
 ground_ctrl_software .down.> hmi: <<HTTP/WebSocket>> Exposes web applications
 
 automation_navigation -up-> chassis_integration: <<MQTT>> Use as hardware abstraction
-automation_navigation -up-> manipulator_integration: <<MQTT>> Use as hardware abstraction
+automation_navigation .up.> mqtt_broker: <<MQTT>> Directly call\nhardware if needed
 chassis_integration .up. mqtt_broker: <<MQTT>>
-manipulator_integration .up. mqtt_broker: <<MQTT>>
-miscellaneous_integration .right. mqtt_broker: <<MQTT>>
 
 telemetry_viewer -[hidden]-> ground_control_app 
+' onboard_components .[hidden]up-> ground_control_app
 
 legend
     **HMI** - Human-Machine Interface
